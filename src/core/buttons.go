@@ -47,8 +47,8 @@ var SourceCodeBtn = url("Source Code", "https://github.com/AshokShau/TgMusicBot"
 
 func SupportKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 
-	channelBtn := url("Updates", config.Conf.SupportChannel)
-	groupBtn := url("Group", config.Conf.SupportGroup)
+	channelBtn := url("Updates", config.SupportChannel)
+	groupBtn := url("Group", config.SupportGroup)
 
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
@@ -59,8 +59,8 @@ func SupportKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 }
 
 func SupportBtn() *gotdbot.ReplyMarkupInlineKeyboard {
-	channelBtn := url("Updates", config.Conf.SupportChannel)
-	groupBtn := url("Group", config.Conf.SupportGroup)
+	channelBtn := url("Updates", config.SupportChannel)
+	groupBtn := url("Group", config.SupportGroup)
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
 			{channelBtn, groupBtn},
@@ -124,7 +124,6 @@ func HelpMenuKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 }
 
 func BackHelpMenuKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
-
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
 			{HelpBtn, HomeBtn},
@@ -134,7 +133,6 @@ func BackHelpMenuKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 }
 
 func ControlButtons(mode string) *gotdbot.ReplyMarkupInlineKeyboard {
-
 	skipBtn := cb("‣‣I", "play_skip")
 	stopBtn := cb("▢", "play_stop")
 	pauseBtn := cb("II", "play_pause")
@@ -201,8 +199,8 @@ func AddMeMarkup(username string) *gotdbot.ReplyMarkupInlineKeyboard {
 		fmt.Sprintf("https://t.me/%s?startgroup=true", username),
 	)
 
-	channelBtn := url("Updates", config.Conf.SupportChannel)
-	groupBtn := url("Group", config.Conf.SupportGroup)
+	channelBtn := url("Updates", config.SupportChannel)
+	groupBtn := url("Group", config.SupportGroup)
 
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{

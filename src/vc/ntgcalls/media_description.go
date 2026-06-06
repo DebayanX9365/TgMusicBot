@@ -1,11 +1,3 @@
-/*
- * TgMusicBot - Telegram Music Bot
- *  Copyright (c) 2025-2026 Ashok Shau
- *
- *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
- */
-
 package ntgcalls
 
 //#include "ntgcalls.h"
@@ -21,16 +13,20 @@ type MediaDescription struct {
 func (ctx *MediaDescription) ParseToC() C.ntg_media_description_struct {
 	var x C.ntg_media_description_struct
 	if ctx.Microphone != nil {
-		x.microphone = new(ctx.Microphone.ParseToC())
+		microphone := ctx.Microphone.ParseToC()
+		x.microphone = &microphone
 	}
 	if ctx.Speaker != nil {
-		x.speaker = new(ctx.Speaker.ParseToC())
+		speaker := ctx.Speaker.ParseToC()
+		x.speaker = &speaker
 	}
 	if ctx.Camera != nil {
-		x.camera = new(ctx.Camera.ParseToC())
+		camera := ctx.Camera.ParseToC()
+		x.camera = &camera
 	}
 	if ctx.Screen != nil {
-		x.screen = new(ctx.Screen.ParseToC())
+		screen := ctx.Screen.ParseToC()
+		x.screen = &screen
 	}
 	return x
 }

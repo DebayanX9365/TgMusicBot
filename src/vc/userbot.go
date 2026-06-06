@@ -17,23 +17,21 @@ import (
 	"time"
 
 	"ashokshau/tgmusic/src/core/cache"
-	"ashokshau/tgmusic/src/core/db"
-	"ashokshau/tgmusic/src/vc/ubot"
 
 	td "github.com/AshokShau/gotdbot"
 )
 
 // joinAssistant ensures the assistant is a member of the specified chat.
-func (c *TelegramCalls) joinAssistant(chatID int64, call *ubot.Context, index int) error {
+func (c *TelegramCalls) joinAssistant(chatID int64, call *Assistant, index int) error {
 	status, err := c.checkUserStats(chatID, call, index)
 	if err != nil {
-		return fmt.Errorf("joinAssistant (client-%d): check user status: %w", index, err)
+		return fmt.Errorf("(client%d): failed to check user status: %w", index, err)
 	}
 
 	logger.Info("chat member status", "chat_id", chatID, "status", status, "index", index)
 
 	switch status.(type) {
-	case *td.ChatMemberStatusMember, td.ChatMemberStatusCreator, td.ChatMemberStatusAdministrator, td.ChatMemberStatusMember:
+	case *td.ChatMemberStatusMember, td.ChatMemberStatusCreator, td.ChatMemberStatusAdministrator, td.ChatMemberStatusMember, *td.ChatMemberStatusAdministrator, *td.ChatMemberStatusCreator:
 		return nil
 
 	case *td.ChatMemberStatusLeft, td.ChatMemberStatusLeft:
@@ -62,13 +60,13 @@ func (c *TelegramCalls) joinAssistant(chatID int64, call *ubot.Context, index in
 }
 
 // recoverBannedAssistant attempts to unban or unmute the assistant using bot admin rights.
-func (c *TelegramCalls) recoverBannedAssistant(chatID int64, call *ubot.Context, index int, isBanned bool) error {
+func (c *TelegramCalls) recoverBannedAssistant(chatID int64, call *Assistant, index int, isBanned bool) error {
 	ubID := call.App.Me().ID
 	botStatus, err := cache.GetUserAdmin(c.bot, chatID, c.bot.Me.Id, false)
 	if err != nil {
 		if strings.Contains(err.Error(), "is not an admin in chat") {
 			return fmt.Errorf(
-				"client %d: bot is not an admin, cannot unban my assistant (<code>%d</code>)",
+				"client%d: bot is not an admin, cannot unban my assistant (<code>%d</code>)",
 				index, ubID,
 			)
 		}
@@ -78,7 +76,7 @@ func (c *TelegramCalls) recoverBannedAssistant(chatID int64, call *ubot.Context,
 	admin, ok := botStatus.Status.(*td.ChatMemberStatusAdministrator)
 	if !ok || admin.Rights == nil || !admin.Rights.CanRestrictMembers {
 		return fmt.Errorf(
-			"assistant (client %d, <code>%d</code>): bot lacks CanRestrictMembers",
+			"client%d is banned in your group (<code>%d</code>) & bot lacks CanRestrictMembers to unban my assistant",
 			index, ubID,
 		)
 	}
@@ -100,48 +98,12 @@ func (c *TelegramCalls) recoverBannedAssistant(chatID int64, call *ubot.Context,
 	return nil
 }
 
-// JoinAssistant attempts to join the assigned assistant to the chat.
-// If it fails, it returns an error and removes the assistant from the database.
-func (c *TelegramCalls) JoinAssistant(chatID int64) (*ubot.Context, error) {
-	index, err := c.getClientIndex(chatID)
-	if err != nil {
-		return nil, err
-	}
-
-	c.mu.RLock()
-	call, ok := c.uBContext[index]
-	c.mu.RUnlock()
-
-	if !ok {
-		return nil, fmt.Errorf("client %d not found in context", index)
-	}
-
-	assistantID := call.App.Me().ID
-
-	if err = c.joinAssistant(chatID, call, index); err != nil {
-		slog.Info("assistant failed to join chat",
-			"chat_id", chatID, "assistant_id", assistantID, "error", err, "index", index)
-
-		cacheKey := fmt.Sprintf("%d:%d", chatID, assistantID)
-		c.statusCache.Delete(cacheKey)
-		_ = db.Instance.RemoveAssistant(chatID)
-
-		return nil, err
-	}
-
-	if err := db.Instance.SetAssistant(chatID, index); err != nil {
-		slog.Warn("failed to set assistant in database", "chat_id", chatID, "index", index, "error", err)
-	}
-
-	return call, nil
-}
-
 // clientIndexFor returns the 0-based index for the given call, or -1 if not found.
 // Caller must not hold mu.
-func (c *TelegramCalls) clientIndexFor(call *ubot.Context) int {
+func (c *TelegramCalls) clientIndexFor(call *Assistant) int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	for idx, ctx := range c.uBContext {
+	for idx, ctx := range c.assistants {
 		if ctx == call {
 			return idx
 		}
@@ -151,7 +113,7 @@ func (c *TelegramCalls) clientIndexFor(call *ubot.Context) int {
 
 // checkUserStats returns the assistant's membership status in chatID.
 // Results are cached; a cache miss triggers a live Telegram API call.
-func (c *TelegramCalls) checkUserStats(chatID int64, call *ubot.Context, index int) (td.ChatMemberStatus, error) {
+func (c *TelegramCalls) checkUserStats(chatID int64, call *Assistant, index int) (td.ChatMemberStatus, error) {
 	userID := call.App.Me().ID
 	cacheKey := fmt.Sprintf("%d:%d", chatID, userID)
 	if cached, ok := c.statusCache.Get(cacheKey); ok {
@@ -174,7 +136,7 @@ func (c *TelegramCalls) checkUserStats(chatID int64, call *ubot.Context, index i
 }
 
 // joinUb joins the assistant to chatID via an ChatInviteLink link.
-func (c *TelegramCalls) joinUb(chatID int64, call *ubot.Context, index int) error {
+func (c *TelegramCalls) joinUb(chatID int64, call *Assistant, index int) error {
 	ub := call.App
 	cacheKey := strconv.FormatInt(chatID, 10)
 
@@ -214,7 +176,6 @@ func (c *TelegramCalls) resolveInviteLink(chatID int64, cacheKey string) (string
 		return "", errors.New("telegram returned an empty invite link")
 	}
 
-	link = strings.Replace(link, "https://t.me/+", "https://t.me/joinchat/", 1)
 	c.UpdateInviteLink(chatID, link)
 	return link, nil
 }
@@ -239,9 +200,11 @@ func (c *TelegramCalls) handleJoinError(chatID, userID int64, index int, err err
 		return nil
 
 	case strings.Contains(errMsg, "INVITE_HASH_EXPIRED"):
+		cached, _ := c.inviteCache.Get(strconv.FormatInt(chatID, 10))
+		logger.Warn("invite link expired", "chat_id", chatID, "index", index, "cached_link", cached)
 		c.inviteCache.Delete(strconv.FormatInt(chatID, 10))
 		c.UpdateMembership(chatID, userID, &td.ChatMemberStatusBanned{})
-		return fmt.Errorf("client %d: assistant (<code>%d</code>) invite link expired or assistant is banned", index, userID)
+		return fmt.Errorf("client %d: assistant (<code>%d</code>) invite link expired", index, userID)
 
 	case strings.Contains(errMsg, "CHANNEL_PRIVATE"):
 		c.UpdateMembership(chatID, userID, &td.ChatMemberStatusLeft{})

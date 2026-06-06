@@ -1,4 +1,4 @@
-FROM golang:1.26-bookworm AS builder
+FROM golang:1.25-bookworm AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go run github.com/AshokShau/gotdbot/scripts/tools@latest
+RUN go run github.com/AshokShau/gotdbot/scripts/tools
 RUN go run setup_ntgcalls.go
 
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o main .

@@ -53,7 +53,8 @@ func runShellCommand(cmd string, timeout time.Duration) (string, string, int) {
 
 	exitCode := 0
 	if err != nil {
-		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			exitCode = exitErr.ExitCode()
 		}
 	}
@@ -107,7 +108,7 @@ func shellRunner(c *td.Client, ctx *td.Context) error {
 		return td.EndGroups
 	}
 
-	file := filepath.Join(config.Conf.DownloadsDir, fmt.Sprintf("%d.txt", time.Now().UnixNano()))
+	file := filepath.Join(config.DownloadsDir, fmt.Sprintf("%d.txt", time.Now().UnixNano()))
 	if err := os.WriteFile(file, []byte(finalOutput), 0644); err != nil {
 		_, _ = msg.EditText(c, fmt.Sprintf("Failed to write output: %v", err), nil)
 		return td.EndGroups

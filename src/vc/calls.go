@@ -25,10 +25,8 @@ import (
 	"ashokshau/tgmusic/src/core"
 	"ashokshau/tgmusic/src/core/cache"
 	"ashokshau/tgmusic/src/core/db"
-	"ashokshau/tgmusic/src/core/dl"
 	"ashokshau/tgmusic/src/utils"
 	"ashokshau/tgmusic/src/vc/ntgcalls"
-	"ashokshau/tgmusic/src/vc/ubot"
 	"context"
 	"crypto/rand"
 	"errors"
@@ -42,12 +40,10 @@ import (
 	td "github.com/AshokShau/gotdbot"
 )
 
-const DefaultStreamURL = "https://t.me/FallenSongs/1295"
-
 // getClientIndex selects an assistant client index (0-based) for a given chat.
 func (c *TelegramCalls) getClientIndex(chatID int64) (int, error) {
 	c.mu.RLock()
-	totalClients := len(c.uBContext)
+	totalClients := len(c.assistants)
 	c.mu.RUnlock()
 
 	if totalClients == 0 {
@@ -86,8 +82,8 @@ func (c *TelegramCalls) getClientIndex(chatID int64) (int, error) {
 	return newClientIndex, nil
 }
 
-// GetGroupAssistant retrieves the ubot.Context and its index for a given chat.
-func (c *TelegramCalls) GetGroupAssistant(chatID int64) (*ubot.Context, int, error) {
+// GetGroupAssistant retrieves the assistant and its index for a given chat.
+func (c *TelegramCalls) GetGroupAssistant(chatID int64) (*Assistant, int, error) {
 	clientIndex, err := c.getClientIndex(chatID)
 	if err != nil {
 		return nil, -1, err
@@ -96,26 +92,26 @@ func (c *TelegramCalls) GetGroupAssistant(chatID int64) (*ubot.Context, int, err
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	call, ok := c.uBContext[clientIndex]
+	call, ok := c.assistants[clientIndex]
 	if !ok {
 		return nil, -1, fmt.Errorf("no ntgcalls instance was found for client index %d", clientIndex)
 	}
 	return call, clientIndex, nil
 }
 
-func (c *TelegramCalls) playMedia(chatID int64, filePath string, video bool, ffmpegParameters string, call *ubot.Context, index int) error {
-	if chatID < 0 {
-		if err := c.joinAssistant(chatID, call, index); err != nil {
-			cache.ChatCache.ClearChat(chatID)
-			return err
-		}
-	} else {
-		_, _ = call.App.ResolvePeer(chatID)
+func (c *TelegramCalls) playMedia(chatID int64, filePath string, video bool, ffmpegParameters string, call *Assistant, index int) error {
+	if chatID > 0 {
+		return errors.New("private calls are not supported for media playback")
+	}
+
+	if err := c.joinAssistant(chatID, call, index); err != nil {
+		cache.ChatCache.ClearChat(chatID)
+		return err
 	}
 
 	logger.Debug("Playing media in chat", "id", chatID, "path", filePath, "index", index)
 	mediaDesc := getMediaDescription(filePath, video, ffmpegParameters)
-	if err := call.Play(chatID, mediaDesc); err != nil {
+	if err := call.Play(context.Background(), chatID, mediaDesc); err != nil {
 		cache.ChatCache.ClearChat(chatID)
 		return err
 	}
@@ -134,7 +130,7 @@ func (c *TelegramCalls) PlayMedia(chatID int64, filePath string, video bool, ffm
 
 	for {
 		c.mu.RLock()
-		totalClients := len(c.uBContext)
+		totalClients := len(c.assistants)
 		c.mu.RUnlock()
 
 		if len(tried) >= totalClients {
@@ -152,7 +148,7 @@ func (c *TelegramCalls) PlayMedia(chatID int64, filePath string, video bool, ffm
 		if tried[index] {
 			index = -1
 			c.mu.RLock()
-			for i, ctx := range c.uBContext {
+			for i, ctx := range c.assistants {
 				if !tried[i] {
 					index = i
 					call = ctx
@@ -197,60 +193,11 @@ func (c *TelegramCalls) PlayMedia(chatID int64, filePath string, video bool, ffm
 			continue
 		}
 
-		logger.Error("Failed to play the media", "error", err, "index", index)
-		return fmt.Errorf("client%d: playback failed: %w", index, err)
+		logger.Error("Failed to play the media", "error", err, "index", index, "chatID", chatID)
+		return fmt.Errorf("playback failed: %w", err)
 	}
 
 	return fmt.Errorf("failed to play media after trying all assistants: %w", lastErr)
-}
-
-// downloadAndPrepareSong handles the download and preparation of a song for playback.
-// It returns an error if the download or preparation fails.
-func (c *TelegramCalls) downloadAndPrepareSong(song *utils.CachedTrack, reply *td.Message) error {
-	if song.FilePath != "" {
-		return nil
-	}
-
-	dlPath, err := dl.DownloadCachedTrack(song, c.bot)
-	if err != nil {
-		_, _ = reply.EditText(c.bot, "⚠️ Download failed. Skipping track...", nil)
-		return err
-	}
-
-	song.FilePath = dlPath
-	if song.FilePath == "" {
-		_, _ = reply.EditText(c.bot, "⚠️ Download failed. Skipping track...", nil)
-		return errors.New("download failed due to an empty file path")
-	}
-
-	return nil
-}
-
-// PlayNext plays the next song in the queue, handles looping, and notifies the chat when the queue is finished.
-func (c *TelegramCalls) PlayNext(chatID int64) error {
-	loop := cache.ChatCache.GetLoopCount(chatID)
-	if loop > 0 {
-		cache.ChatCache.SetLoopCount(chatID, loop-1)
-		if currentsSong := cache.ChatCache.GetPlayingTrack(chatID); currentsSong != nil {
-			return c.playSong(chatID, currentsSong)
-		}
-	}
-
-	if nextSong := cache.ChatCache.GetUpcomingTrack(chatID); nextSong != nil {
-		cache.ChatCache.RemoveCurrentSong(chatID)
-		return c.playSong(chatID, nextSong)
-	}
-
-	cache.ChatCache.RemoveCurrentSong(chatID)
-	return c.handleNoSong(chatID)
-}
-
-// handleNoSong manages the situation where there are no more songs in the queue by stopping the playback
-// and sending a notification to the chat.
-func (c *TelegramCalls) handleNoSong(chatID int64) error {
-	_ = c.Stop(chatID)
-	_, _ = c.bot.SendTextMessage(chatID, "🎵 Queue finished. Add more songs with /play.", nil)
-	return nil
 }
 
 // playSong downloads and plays a single song. It sends a message to the chat to indicate the download status
@@ -267,24 +214,20 @@ func (c *TelegramCalls) playSong(chatID int64, song *utils.CachedTrack) error {
 	}
 
 	if err = c.PlayMedia(chatID, song.FilePath, song.IsVideo, ""); err != nil {
-		_, err := reply.EditText(c.bot, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
-		return err
+		_, _ = reply.EditText(c.bot, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
+		return nil
 	}
 
 	if song.Duration == 0 {
 		song.Duration = utils.GetMediaDuration(song.FilePath)
 	}
 
-	escURL := html.EscapeString(song.URL)
-	escName := html.EscapeString(song.Name)
-	escUser := html.EscapeString(song.User)
-
 	text := fmt.Sprintf(
 		"<u><b>| Started streaming</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
-		escURL,
-		escName,
+		html.EscapeString(song.URL),
+		html.EscapeString(song.Name),
 		utils.SecToMin(song.Duration),
-		escUser,
+		html.EscapeString(song.User),
 	)
 
 	_, err = reply.EditText(c.bot, text, &td.EditTextMessageOpts{
@@ -309,14 +252,14 @@ func (c *TelegramCalls) Stop(chatId int64) error {
 	}
 
 	cache.ChatCache.ClearChat(chatId)
-	err = call.Stop(chatId)
+	err = call.stopCall(context.Background(), chatId)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return nil
 		}
 
 		slog.Info("[Stop] Failed to stop the call", "error", err, "index", index)
-		return fmt.Errorf("failed to stop call (client %d): %w", index, err)
+		return fmt.Errorf("failed to stop call: %w", err)
 	}
 	return nil
 }
@@ -329,10 +272,10 @@ func (c *TelegramCalls) Pause(chatId int64) (bool, error) {
 		return false, err
 	}
 
-	res, err := call.Pause(chatId)
+	res, err := call.binding.Pause(chatId)
 	if err != nil {
 		slog.Warn("[Pause] Failed to pause the call", "error", err, "index", index)
-		return res, fmt.Errorf("failed to pause (client %d): %w", index, err)
+		return res, fmt.Errorf("failed to pause: %w", err)
 	}
 	return res, err
 }
@@ -344,7 +287,7 @@ func (c *TelegramCalls) Resume(chatId int64) (bool, error) {
 		return false, err
 	}
 
-	res, err := call.Resume(chatId)
+	res, err := call.binding.Resume(chatId)
 	if err != nil {
 		logger.Warn("Failed to resume the call", "error", err, "index", index)
 		return res, fmt.Errorf("failed to resume: %w", err)
@@ -360,7 +303,7 @@ func (c *TelegramCalls) Mute(chatId int64) (bool, error) {
 		return false, err
 	}
 
-	res, err := call.Mute(chatId)
+	res, err := call.binding.Mute(chatId)
 	if err != nil {
 		logger.Warn("Failed to mute the call", "error", err, "index", index)
 		return res, fmt.Errorf("failed to mute: %w", err)
@@ -376,7 +319,7 @@ func (c *TelegramCalls) Unmute(chatId int64) (bool, error) {
 		return false, err
 	}
 
-	res, err := call.Unmute(chatId)
+	res, err := call.binding.UnMute(chatId)
 	if err != nil {
 		logger.Warn("Failed to unmute the call", "error", err, "index", index)
 		return res, fmt.Errorf("failed to unmute: %w", err)
@@ -392,29 +335,13 @@ func (c *TelegramCalls) PlayedTime(chatId int64) (uint64, error) {
 		return 0, err
 	}
 
-	_time, err := call.Time(chatId, 0)
+	_time, err := call.binding.Time(chatId, 0)
 	if err != nil {
 		logger.Warn("Failed to get played time", "error", err, "index", index)
 		return 0, fmt.Errorf("failed to get played time: %w", err)
 	}
 
 	return _time, nil
-}
-
-// CpuUsage Get an estimate of the CPU usage of the current process.
-func (c *TelegramCalls) CpuUsage(chatId int64) (float64, error) {
-	call, index, err := c.GetGroupAssistant(chatId)
-	if err != nil {
-		return 0, err
-	}
-
-	usage, err := call.CpuUsage()
-	if err != nil {
-		logger.Warn("Failed to get CPU usage", "error", err, "index", index)
-		return 0, fmt.Errorf("failed to get cpu usage: %w", err)
-	}
-
-	return usage, nil
 }
 
 // SeekStream jumps to a specific time in the current media stream.
@@ -476,7 +403,7 @@ func (c *TelegramCalls) RegisterHandlers(client *td.Client) {
 
 	c.startAutoLeave(context.Background())
 
-	for _, call := range c.uBContext {
+	for _, call := range c.assistants {
 		call.OnStreamEnd(func(chatID int64, streamType ntgcalls.StreamType, device ntgcalls.StreamDevice) {
 			if streamType == ntgcalls.VideoStream {
 				return
@@ -487,35 +414,12 @@ func (c *TelegramCalls) RegisterHandlers(client *td.Client) {
 			}
 		})
 
-		call.OnIncomingCall(func(ub *ubot.Context, chatID int64) {
-			_, _ = ub.App.SendMessage(chatID, "Incoming call detected. Playing music...")
-			msg, err := utils.GetMessage(c.bot, DefaultStreamURL)
-			if err != nil {
-				call.App.Logger.Warnf("[OnIncomingCall] Failed to get the message: %v", err)
-				return
-			}
-
-			file, err := msg.Download(c.bot, 1, 0, 0, true)
-			if err != nil {
-				call.App.Logger.Warnf("[OnIncomingCall] Failed to download the message: %v", err)
-				return
-			}
-
-			err = c.PlayMedia(chatID, file.Local.Path, false, "")
-			if err != nil {
-				call.App.Logger.Warnf("[OnIncomingCall] Failed to play the media: %v", err)
-				return
-			}
-
-			return
-		})
-
 		_, err := call.App.SendMessage(client.Me.Usernames.EditableUsername, "/start")
 		if err != nil {
 			call.App.Logger.Warnf("failed to start bot: %v", err)
 		}
 
-		_, err = call.App.SendMessage(config.Conf.LoggerId, "Userbot started.")
+		_, err = call.App.SendMessage(config.LoggerId, "Userbot started.")
 		if err != nil {
 			call.App.Logger.Warnf("Failed to send message: %v", err)
 		}
