@@ -23,8 +23,7 @@ import (
 	td "github.com/AshokShau/gotdbot"
 )
 
-func playCallbackHandler(c *td.Client, ctx *td.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
+func playCallbackHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !adminModeCB(c, cb) {
 		return td.EndGroups
 	}
@@ -68,7 +67,7 @@ func playCallbackHandler(c *td.Client, ctx *td.Context) error {
 
 	switch {
 	case strings.Contains(data, "play_skip"):
-		if err := vc.Calls.PlayNext(chatID); err != nil {
+		if err := vc.Calls.PlayNext(c, chatID); err != nil {
 			_ = cb.Answer(c, 0, false, "Unable to skip the current track.", "")
 			_, _ = cb.EditMessageText(c, "Unable to skip the current track.", &td.EditTextMessageOpts{ReplyMarkup: core.ControlButtons(""), ParseMode: "HTML", DisableWebPagePreview: true})
 			return nil
@@ -78,7 +77,7 @@ func playCallbackHandler(c *td.Client, ctx *td.Context) error {
 		return nil
 
 	case strings.Contains(data, "play_stop"):
-		if err := vc.Calls.Stop(chatID); err != nil {
+		if err := vc.Calls.Stop(chatID, false); err != nil {
 			_ = cb.Answer(c, 0, false, "Unable to stop playback.", "")
 			_, _ = cb.EditMessageText(c, "Unable to stop playback.", &td.EditTextMessageOpts{ReplyMarkup: core.ControlButtons(""), ParseMode: "HTML", DisableWebPagePreview: true})
 			return nil
@@ -180,8 +179,7 @@ func playCallbackHandler(c *td.Client, ctx *td.Context) error {
 	return nil
 }
 
-func vcPlayHandler(c *td.Client, ctx *td.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
+func vcPlayHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	data := cb.DataString()
 
 	if strings.Contains(data, "vcplay_close") {

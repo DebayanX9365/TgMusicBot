@@ -22,7 +22,7 @@ import (
 func checkBotAdmin(c *td.Client, chatID int64, replyErr func(msg string)) bool {
 	botStatus, err := cache.GetUserAdmin(c, chatID, c.Me.Id, false)
 	if err != nil {
-		if strings.Contains(err.Error(), "is not an admin in chat") {
+		if strings.Contains(err.Error(), "is not an administrator in chat") {
 			replyErr("Bot is not an administrator in this chat. Please promote the bot with invite users permission.")
 		} else {
 			c.Logger.Warn("GetUserAdmin error", "error", err)
@@ -46,8 +46,8 @@ func checkBotAdmin(c *td.Client, chatID int64, replyErr func(msg string)) bool {
 	}
 }
 
-func adminMode(c *td.Client, ctx *td.Context) bool {
-	m := ctx.EffectiveMessage
+func adminMode(c *td.Client, m *td.Message) bool {
+
 	if m.IsPrivate() {
 		return false
 	}
@@ -75,6 +75,10 @@ func adminMode(c *td.Client, ctx *td.Context) bool {
 }
 
 func adminModeCB(c *td.Client, cb *td.UpdateNewCallbackQuery) bool {
+	if cb.IsPrivate() {
+		return false
+	}
+
 	chatID := cb.ChatId
 
 	if !checkBotAdmin(c, chatID, func(msg string) { _ = cb.Answer(c, 0, true, msg, "") }) {
@@ -97,8 +101,7 @@ func adminModeCB(c *td.Client, cb *td.UpdateNewCallbackQuery) bool {
 	}
 }
 
-func playMode(c *td.Client, ctx *td.Context) bool {
-	m := ctx.EffectiveMessage
+func playMode(c *td.Client, m *td.Message) bool {
 	if m.IsPrivate() {
 		return false
 	}

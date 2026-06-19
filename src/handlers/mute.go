@@ -18,12 +18,11 @@ import (
 	td "github.com/AshokShau/gotdbot"
 )
 
-func muteHandler(c *td.Client, ctx *td.Context) error {
-	if !adminMode(c, ctx) {
+func muteHandler(c *td.Client, m *td.Message) error {
+	if !adminMode(c, m) {
 		return td.EndGroups
 	}
 
-	m := ctx.EffectiveMessage
 	if args := Args(m); args != "" {
 		return td.EndGroups
 	}
@@ -43,12 +42,11 @@ func muteHandler(c *td.Client, ctx *td.Context) error {
 	return err
 }
 
-func unmuteHandler(c *td.Client, ctx *td.Context) error {
-	if !adminMode(c, ctx) {
+func unmuteHandler(c *td.Client, m *td.Message) error {
+	if !adminMode(c, m) {
 		return td.EndGroups
 	}
 
-	m := ctx.EffectiveMessage
 	if args := Args(m); args != "" {
 		return td.EndGroups
 	}

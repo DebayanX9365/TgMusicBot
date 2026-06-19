@@ -25,25 +25,29 @@ import (
 )
 
 // playHandler handles the /play command.
-func playHandler(c *td.Client, ctx *td.Context) error {
-	if !playMode(c, ctx) {
+func playHandler(c *td.Client, m *td.Message) error {
+	if !playMode(c, m) {
 		return td.EndGroups
 	}
 
-	return handlePlay(c, ctx, false)
+	return handlePlay(c, m, false)
 }
 
 // vPlayHandler handles the /vplay command.
-func vPlayHandler(c *td.Client, ctx *td.Context) error {
-	if !playMode(c, ctx) {
+func vPlayHandler(c *td.Client, m *td.Message) error {
+	if !playMode(c, m) {
 		return td.EndGroups
 	}
-	return handlePlay(c, ctx, true)
+
+	if !config.EnableVideoPlayback {
+		_, _ = m.ReplyText(c, "🎥 Video playback is currently disabled.\n\nAs more people use the bot, video streaming can sometimes cause lag and reduce music quality in voice chats. To ensure a smooth listening experience for everyone, this feature has been turned off for now.\n\nThanks for your support and understanding ❤️", nil)
+		return td.EndGroups
+	}
+	return handlePlay(c, m, true)
 }
 
-func handlePlay(c *td.Client, ctx *td.Context, isVideo bool) error {
-	chatID := ctx.EffectiveChatId
-	m := ctx.EffectiveMessage
+func handlePlay(c *td.Client, m *td.Message, isVideo bool) error {
+	chatID := m.ChatId
 
 	if queueLen := cache.ChatCache.GetQueueLength(chatID); queueLen > 10 {
 		_, _ = m.ReplyText(c, "Queue is full (max 10 tracks). Use /end to clear.", nil)
@@ -207,7 +211,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 
 	saveCache.FilePath = filePath
 
-	if err = vc.Calls.PlayMedia(chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
+	if err = vc.Calls.PlayMedia(c, chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
 		_, err = updater.EditText(c, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
@@ -305,7 +309,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 		saveCache.FilePath = dlResult
 	}
 
-	if err := vc.Calls.PlayMedia(chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
+	if err := vc.Calls.PlayMedia(c, chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
 		_, err = updater.EditText(c, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
@@ -411,7 +415,7 @@ func handleMultipleTracks(c *td.Client, m *td.Message, updater *td.Message, trac
 	}
 
 	if shouldPlayFirst && firstTrack != nil {
-		_ = vc.Calls.PlayNext(chatId)
+		_ = vc.Calls.PlayNext(c, chatId)
 	}
 
 	_, err := updater.EditText(c, fullMessage, &td.EditTextMessageOpts{

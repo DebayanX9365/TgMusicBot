@@ -19,12 +19,11 @@ import (
 )
 
 // speedHandler handles the /speed command.
-func speedHandler(c *td.Client, ctx *td.Context) error {
-	if !adminMode(c, ctx) {
+func speedHandler(c *td.Client, m *td.Message) error {
+	if !adminMode(c, m) {
 		return td.EndGroups
 	}
-	chatID := ctx.EffectiveChatId
-	m := ctx.EffectiveMessage
+	chatID := m.ChatId
 
 	if !cache.ChatCache.IsActive(chatID) {
 		_, err := m.ReplyText(c, "The bot is not streaming in the video chat.", nil)
@@ -48,7 +47,7 @@ func speedHandler(c *td.Client, ctx *td.Context) error {
 		return nil
 	}
 
-	if err = vc.Calls.ChangeSpeed(chatID, speed); err != nil {
+	if err = vc.Calls.ChangeSpeed(c, chatID, speed); err != nil {
 		_, _ = m.ReplyText(c, fmt.Sprintf("An error occurred while changing the speed: %s", err.Error()), replyOpts)
 		return nil
 	}
