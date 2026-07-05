@@ -72,13 +72,13 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool) error {
 	if strings.HasPrefix(input, "tgpl_") {
 		playlist, err := db.Instance.GetPlaylist(input)
 		if err != nil {
-			_, err = m.ReplyText(c, "❌ Playlist not found.", nil)
+			_, err = m.ReplyText(c, "❌ Hawsi not found.", nil)
 			return err
 		}
 
 		tracks := db.ConvertSongsToTracks(playlist.Songs)
 		if len(tracks) == 0 {
-			_, err = m.ReplyText(c, "❌ Playlist is empty.", nil)
+			_, err = m.ReplyText(c, "❌ Hawsi is empty.", nil)
 			return err
 		}
 
@@ -290,7 +290,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 		escName := html.EscapeString(saveCache.Name)
 		escUser := html.EscapeString(saveCache.User)
 		queueInfo := fmt.Sprintf(
-			"<u><b>Added to queue: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
+			"<u><b>Itne Aur Hau Abhi...: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
 			qLen, escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 		)
 
@@ -345,7 +345,7 @@ func handleMultipleTracks(c *td.Client, m *td.Message, updater *td.Message, trac
 		return err
 	}
 
-	queueHeader := "<u><b>Added to Queue:</b></u>\n<blockquote expandable>\n"
+	queueHeader := "<u><b>Itne Aur Hai Abhi...:</b></u>\n<blockquote expandable>\n"
 	var tracksToAdd []*utils.CachedTrack
 	var skippedTracks []string
 
