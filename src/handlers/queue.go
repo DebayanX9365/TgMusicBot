@@ -37,7 +37,7 @@ func queueHandler(c *td.Client, m *td.Message) error {
 
 	queue := cache.ChatCache.GetQueue(chatID)
 	if len(queue) == 0 {
-		_, _ = m.ReplyText(c, "The queue is empty.", nil)
+		_, _ = m.ReplyText(c, "The Hawsi is empty.", nil)
 		return nil
 	}
 
@@ -50,7 +50,7 @@ func queueHandler(c *td.Client, m *td.Message) error {
 	playedTime, _ := vc.Calls.PlayedTime(chatID)
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<b>Queue for %s</b>\n\n", chat.Title))
+	b.WriteString(fmt.Sprintf("<b>Hawsi Ki Playlist for %s</b>\n\n", chat.Title))
 
 	b.WriteString("<b>Now Playing:</b>\n")
 	b.WriteString(fmt.Sprintf("• <b>Title:</b> <code>%s</code>\n", truncate(current.Name, 45)))
@@ -100,7 +100,7 @@ func queueHandler(c *td.Client, m *td.Message) error {
 			progress = utils.SecToMin(int(playedTime))
 		}
 		sb.WriteString(fmt.Sprintf(
-			"<b>Queue for %s</b>\n\n<b>Now Playing:</b>\n• <code>%s</code>\n• %s/%s min\n\n<b>Total:</b> %d tracks",
+			"<b>Hawsi Ki Playlist for %s</b>\n\n<b>Now Playing:</b>\n• <code>%s</code>\n• %s/%s min\n\n<b>Total:</b> %d tracks",
 			chat.Title,
 			truncate(current.Name, 45),
 			progress,

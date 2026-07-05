@@ -56,7 +56,7 @@ func addAuthHandler(c *td.Client, m *td.Message) error {
 	UserStatus, err := cache.GetUserAdmin(c, chatID, m.SenderID(), false)
 	if err != nil {
 		c.Logger.Warn("GetUserAdmin error", "error", err)
-		_, _ = m.ReplyText(c, "Unable to verify administrator status.", nil)
+		_, _ = m.ReplyText(c, "Abhi Jyada Dimaag Mat Lagao...", nil)
 		return td.EndGroups
 	}
 
@@ -74,17 +74,17 @@ func addAuthHandler(c *td.Client, m *td.Message) error {
 	}
 
 	if db.Instance.IsAuthUser(chatID, userID) {
-		_, _ = m.ReplyText(c, "This user is already authorized.", nil)
+		_, _ = m.ReplyText(c, "This Hawsi is already authorized...", nil)
 		return nil
 	}
 
 	if err = db.Instance.AddAuthUser(chatID, userID); err != nil {
-		c.Logger.Error("Failed to add authorized user", "error", err)
-		_, _ = m.ReplyText(c, "Failed to authorize the user.", nil)
+		c.Logger.Error("Failed to add authorized hawsi...", "error", err)
+		_, _ = m.ReplyText(c, "Failed to authorize the hawsi...", nil)
 		return nil
 	}
 
-	_, err = m.ReplyText(c, fmt.Sprintf("User %d has been authorized.", userID), nil)
+	_, err = m.ReplyText(c, fmt.Sprintf("Hawsi %d has been authorized.", userID), nil)
 	return err
 }
 
@@ -102,7 +102,7 @@ func removeAuthHandler(c *td.Client, m *td.Message) error {
 	UserStatus, err := cache.GetUserAdmin(c, chatID, m.SenderID(), false)
 	if err != nil {
 		c.Logger.Warn("GetUserAdmin error", "error", err)
-		_, _ = m.ReplyText(c, "Unable to verify administrator status.", nil)
+		_, _ = m.ReplyText(c, "Abhi Jyada Dimaag Mat Lagao....", nil)
 		return td.EndGroups
 	}
 
@@ -120,16 +120,16 @@ func removeAuthHandler(c *td.Client, m *td.Message) error {
 	}
 
 	if !db.Instance.IsAuthUser(chatID, userID) {
-		_, _ = m.ReplyText(c, "This user is not authorized.", nil)
+		_, _ = m.ReplyText(c, "This hawsi is not authorized.", nil)
 		return nil
 	}
 
 	if err := db.Instance.RemoveAuthUser(chatID, userID); err != nil {
-		c.Logger.Error("Failed to remove authorized user", "error", err)
-		_, _ = m.ReplyText(c, "Failed to remove authorized user.", nil)
+		c.Logger.Error("Failed to remove authorized hawsi", "error", err)
+		_, _ = m.ReplyText(c, "Failed to remove authorized hawsi.", nil)
 		return nil
 	}
 
-	_, err = m.ReplyText(c, fmt.Sprintf("User %d has been removed from the authorized list.", userID), nil)
+	_, err = m.ReplyText(c, fmt.Sprintf("Hawsi %d has been removed from the authorized list.", userID), nil)
 	return err
 }

@@ -50,7 +50,7 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool) error {
 	chatID := m.ChatId
 
 	if queueLen := cache.ChatCache.GetQueueLength(chatID); queueLen > 10 {
-		_, _ = m.ReplyText(c, "Queue is full (max 10 tracks). Use /end to clear.", nil)
+		_, _ = m.ReplyText(c, "Hawsi is full (max 10 tracks). Use /end to clear.", nil)
 		return td.EndGroups
 	}
 
@@ -167,14 +167,14 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 
 	fileId := dlMsg.RemoteFileID()
 	if _track := cache.ChatCache.GetTrackIfExists(chatId, fileId); _track != nil {
-		_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+		_, err := updater.EditText(c, "Itne Aur Hai Abhi...", nil)
 		return err
 	}
 
 	dur := utils.GetFileDur(dlMsg)
 	link, err := dlMsg.GetLink(c)
 	if err != nil {
-		c.Logger.Warn("Failed to get file link", "error", err)
+		c.Logger.Warn("Failed to get Hawas link", "error", err)
 		link.Link = ""
 	}
 
@@ -189,7 +189,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 		escName := html.EscapeString(saveCache.Name)
 		escUser := html.EscapeString(saveCache.User)
 		queueInfo := fmt.Sprintf(
-			"<u><b>Added to queue: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
+			"<u><b>Itne Aur Hai Abhi...: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
 			qLen, escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 		)
 		_, err := updater.EditText(c, queueInfo, &td.EditTextMessageOpts{ReplyMarkup: core.ControlButtons("play"), ParseMode: "HTML", DisableWebPagePreview: true})
@@ -199,7 +199,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 	file, err = dlMsg.Download(c, 1, 0, 0, true)
 	if err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
-		_, err = updater.EditText(c, fmt.Sprintf("Download failed: %s", err.Error()), nil)
+		_, err = updater.EditText(c, fmt.Sprintf("Hawas failed: %s", err.Error()), nil)
 		return err
 	}
 
@@ -222,7 +222,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 	escUser := html.EscapeString(saveCache.User)
 
 	nowPlaying := fmt.Sprintf(
-		"<u><b>| Started streaming</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
+		"<u><b>| Hawas Streaming...</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
 		escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 	)
 
@@ -239,18 +239,18 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 func handleTextSearch(c *td.Client, m *td.Message, updater *td.Message, wrapper *dl.DownloaderWrapper, chatId int64, isVideo bool) error {
 	searchResult, err := wrapper.Search()
 	if err != nil {
-		_, err = updater.EditText(c, fmt.Sprintf("❌ Search failed: %s", err.Error()), nil)
+		_, err = updater.EditText(c, fmt.Sprintf("❌ Wrong Hawas...: %s", err.Error()), nil)
 		return err
 	}
 
 	if searchResult.Results == nil || len(searchResult.Results) == 0 {
-		_, err = updater.EditText(c, "😕 No results found. Try a different query.", nil)
+		_, err = updater.EditText(c, "😕 Invalid Hawas. Try a different hawas....", nil)
 		return err
 	}
 
 	song := searchResult.Results[0]
 	if _track := cache.ChatCache.GetTrackIfExists(chatId, song.Id); _track != nil {
-		_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+		_, err := updater.EditText(c, "Hawsi Ka Nanga Naach Already Added...", nil)
 		return err
 	}
 
@@ -262,7 +262,7 @@ func handleUrl(c *td.Client, m *td.Message, updater *td.Message, trackInfo utils
 	if len(trackInfo.Results) == 1 {
 		track := trackInfo.Results[0]
 		if _track := cache.ChatCache.GetTrackIfExists(chatId, track.Id); _track != nil {
-			_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+			_, err := updater.EditText(c, "Hawsi Ka Nanga Naach Already Added...", nil)
 			return err
 		}
 		return handleSingleTrack(c, m, updater, track, "", chatId, isVideo)
