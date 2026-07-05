@@ -45,10 +45,10 @@ func handleVoiceChatMessage(c *td.Client, update *td.UpdateNewMessage) error {
 	switch m.Content.(type) {
 	case *td.MessageVideoChatStarted:
 		cache.ChatCache.ClearChat(chatID)
-		message = "🎙️ Video chat started!\nUse /play <song name> to play music."
+		message = "🎙️ Hey Bhagwan Hawsi Ne Firse VC Shuru Karr Dia... Ab Fir Se Hawas Ka Nanga Naach Hoga."
 	case *td.MessageVideoChatEnded:
 		cache.ChatCache.ClearChat(chatID)
-		message = "🎧 Video chat ended!\nAll queues cleared."
+		message = "🎙️  Thank God VC Band Hua... Lagta Hai Hawsi Ka Hawas Khatam Ho Gya."
 	default:
 		return nil
 	}

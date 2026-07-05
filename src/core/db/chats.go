@@ -108,7 +108,7 @@ func (db *Database) SetPlayType(chatID int64, playType int) error {
 func (db *Database) GetPlayMode(chatID int64) bool {
 	chat, _ := db.getChat(chatID)
 	if chat == nil {
-		return false
+		return true
 	}
 	return chat.AdminPlay
 }
@@ -129,7 +129,7 @@ func (db *Database) SetPlayMode(chatID int64, adminPlay bool) error {
 func (db *Database) GetAdminMode(chatID int64) string {
 	chat, _ := db.getChat(chatID)
 	if chat == nil || chat.AdminMode == "" {
-		return utils.Everyone
+		return utils.Admins
 	}
 	return chat.AdminMode
 }

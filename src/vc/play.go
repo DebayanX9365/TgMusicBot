@@ -43,11 +43,11 @@ func classifyError(err error) errorKind {
 func fatalMessage(err error) error {
 	msg := err.Error()
 	if strings.Contains(msg, "is closed") || strings.Contains(msg, "GROUPCALL_FORBIDDEN") {
-		return errors.New("<b>No active video chat found.</b>\n\nPlease start one and <b>try again</b>")
+		return errors.New("<b>Pehle Hawsi Ko Bolo Call Shuru Karne Ko.</b>\n\n Uske Baad Hawsi Garam Hoga <b>And Khodega.</b>")
 	}
 
 	if strings.Contains(msg, "GROUPCALL_INVALID") {
-		return errors.New("<b>GROUPCALL_INVALID:</b> start a video chat and try again.\n\nIf the problem persists, please report it to the developer.")
+		return errors.New("<b>GROUPCALL_INVALID:</b>Pehle Hawsi Ko Bolo Call Shuru Karne.\n\nIf the problem persists, please report it to the developer.")
 	}
 	return err
 }

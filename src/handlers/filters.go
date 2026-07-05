@@ -66,10 +66,10 @@ func adminMode(c *td.Client, m *td.Message) bool {
 		if db.Instance.IsAdmin(chatID, userID) || db.Instance.IsAuthUser(chatID, userID) {
 			return true
 		}
-		_, _ = m.ReplyText(c, "You must be an administrator to use this command.", nil)
+		_, _ = m.ReplyText(c, "Teri Aukat Nahi Hai Yeh Karne Ki... Bas Hawsi Log Yeh Karr Sakte Hai...", nil)
 		return false
 	default:
-		_, _ = m.ReplyText(c, "You are not authorized to use this command.", nil)
+		_, _ = m.ReplyText(c, "Teri Aukat Nahi Hai Yeh Karne Ki... Bas Hawsi Log Yeh Karr Sakte Hai... ", nil)
 		return false
 	}
 }

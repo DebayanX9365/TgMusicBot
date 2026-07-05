@@ -115,7 +115,7 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool) error {
 		return td.EndGroups
 	}
 
-	updater, err := m.ReplyText(c, "🔍 Searching and downloading...", nil)
+	updater, err := m.ReplyText(c, "🔍 Hawsi Tum Ruko Jara Sabar Karo... Abhi Chalata Hu Thode Der Me...", nil)
 	if err != nil {
 		c.Logger.Warn("failed to send message", "error", err)
 		return td.EndGroups

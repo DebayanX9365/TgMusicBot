@@ -47,12 +47,10 @@ var SourceCodeBtn = url("Source Code", "https://github.com/AshokShau/TgMusicBot"
 
 func SupportKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 
-	channelBtn := url("Updates", config.SupportChannel)
-	groupBtn := url("Group", config.SupportGroup)
+	
 
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
-			{channelBtn, groupBtn},
 			{CloseBtn},
 		},
 	}

@@ -34,9 +34,9 @@ func authListHandler(c *td.Client, m *td.Message) error {
 	}
 
 	text := "<b>Authorized Users</b>\n\n"
-	for _, uid := range authUser {
-		text += fmt.Sprintf("• <a href=\"tg://user?id=%d\">%d</a>\n", uid, uid)
-	}
+for _, uid := range authUser {
+        text += fmt.Sprintf("• <a href=\"tg://user?id=%d\">%d</a>\n", uid, uid)
+}
 
 	_, _ = m.ReplyText(c, text, replyOpts)
 	return td.EndGroups
@@ -63,7 +63,7 @@ func addAuthHandler(c *td.Client, m *td.Message) error {
 	switch UserStatus.Status.(type) {
 	case *td.ChatMemberStatusCreator, *td.ChatMemberStatusAdministrator:
 	default:
-		_, _ = m.ReplyText(c, "You must be an administrator to use this command.", nil)
+		_, _ = m.ReplyText(c, "Teri Aukat Nahi Hai Yeh Karne Ki... Bas Hawsi Log Yeh Karr Sakte Hai...", nil)
 		return td.EndGroups
 	}
 
@@ -109,7 +109,7 @@ func removeAuthHandler(c *td.Client, m *td.Message) error {
 	switch UserStatus.Status.(type) {
 	case *td.ChatMemberStatusCreator, *td.ChatMemberStatusAdministrator:
 	default:
-		_, _ = m.ReplyText(c, "You must be an administrator to use this command.", nil)
+		_, _ = m.ReplyText(c, "Teri Aukat Nahi Hai Yeh Karne Ki... Bas Hawsi Log Yeh Karr Sakte Hai...", nil)
 		return td.EndGroups
 	}
 

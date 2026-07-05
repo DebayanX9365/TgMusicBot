@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"time"
 
-	"ashokshau/tgmusic/src/core"
+
 	"ashokshau/tgmusic/src/core/db"
 
 	td "github.com/AshokShau/gotdbot"
@@ -55,7 +55,7 @@ func startHandler(c *td.Client, m *td.Message) error {
 		}(chatID)
 
 		response := fmt.Sprintf(
-			"Hey %s,\nThis is %s !\n\n<b>Supported Platforms:</b> YouTube, Spotify, Apple Music, SoundCloud, MXPlayer, Deezer, Twitch, Kick....\n\n<b><i>Click on the help button for more info.</i></b>",
+			"👋 Welcome %s!\n\n🎵 Welcome to Hawsi Music Bot.\n\n➜ Add me to a group.\n➜ Start a voice chat.\n➜ Use /play <song name> to enjoy music.\n\nEnjoy! ❤️",
 			firstName(c, m),
 			c.Me.FirstName,
 		)
@@ -63,7 +63,7 @@ func startHandler(c *td.Client, m *td.Message) error {
 		_, err := m.ReplyPhoto(c, td.InputFileRemote{Id: config.StartImg}, &td.SendPhotoOpts{
 			ParseMode:   "HTML",
 			Caption:     response,
-			ReplyMarkup: core.AddMeMarkup(c.Me.Usernames.EditableUsername),
+			ReplyMarkup: nil,
 		})
 
 		return err
@@ -85,7 +85,7 @@ func startHandler(c *td.Client, m *td.Message) error {
 	_, err := m.ReplyText(c, response, &td.SendTextMessageOpts{
 		ParseMode:             "HTML",
 		DisableWebPagePreview: true,
-		ReplyMarkup:           core.SupportBtn(),
+		
 	})
 
 	return err
