@@ -86,7 +86,7 @@ func handleFlood(err error) bool {
 }
 
 func getVideoDimensions(filePath string) (int, int) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=s=x:p=0", filePath)
 	out, err := cmd.Output()
