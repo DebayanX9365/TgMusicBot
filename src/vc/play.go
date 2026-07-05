@@ -43,11 +43,11 @@ func classifyError(err error) errorKind {
 func fatalMessage(err error) error {
 	msg := err.Error()
 	if strings.Contains(msg, "is closed") || strings.Contains(msg, "GROUPCALL_FORBIDDEN") {
-		return errors.New("<b>Pehle Hawsi Ko Bolo Call Shuru Karne Ko.</b>\n\n  <b>And Khodega.</b>")
+		return errors.New("<b>Pehle Hawsi Ko Bolo Call Shuru Karne Ko...</b>\n\n  <b></b>")
 	}
 
 	if strings.Contains(msg, "GROUPCALL_INVALID") {
-		return errors.New("<b>GROUPCALL_INVALID:</b>Pehle Hawsi Ko Bolo Call Shuru Karne.\n\nIf the problem persists, please report it to the developer.")
+		return errors.New("<b>GROUPCALL_INVALID:</b>Pehle Hawsi Ko Bolo Call Shuru Karne...\n\nIf the problem persists, please report it to the developer.")
 	}
 	return err
 }
