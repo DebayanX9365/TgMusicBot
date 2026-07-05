@@ -52,7 +52,7 @@ func queueHandler(c *td.Client, m *td.Message) error {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("<b>Hawsi Ki Playlist for %s</b>\n\n", chat.Title))
 
-	b.WriteString("<b>Now Playing:</b>\n")
+	b.WriteString("<b>Abhi Yeh Chal Raha Hai...:</b>\n")
 	b.WriteString(fmt.Sprintf("• <b>Title:</b> <code>%s</code>\n", truncate(current.Name, 45)))
 	b.WriteString(fmt.Sprintf("• <b>By:</b> %s\n", current.User))
 	b.WriteString(fmt.Sprintf("• <b>Duration:</b> %s min\n", utils.SecToMin(current.Duration)))
