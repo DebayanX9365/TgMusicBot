@@ -290,7 +290,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 		escName := html.EscapeString(saveCache.Name)
 		escUser := html.EscapeString(saveCache.User)
 		queueInfo := fmt.Sprintf(
-			"<u><b>Itne Aur Hau Abhi...: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
+			"<u><b>Itne Aur Hai Abhi...: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
 			qLen, escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 		)
 
