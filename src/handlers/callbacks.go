@@ -83,7 +83,7 @@ func playCallbackHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 			return nil
 		}
 
-		msg := fmt.Sprintf("<b>Hawsi Roka Hai.</b>\nRequested by: %s", html.EscapeString(user.FirstName))
+		msg := fmt.Sprintf("<b>Ek Hawsi Ke Taraf Se Roka Gaya Hai.</b>\nRequested by: %s", html.EscapeString(user.FirstName))
 		_ = cb.Answer(c, 0, false, "Playback stopped.", "")
 		_, err := cb.EditMessageText(c, msg, &td.EditTextMessageOpts{ReplyMarkup: core.ControlButtons(""), ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
