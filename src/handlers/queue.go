@@ -71,7 +71,7 @@ func queueHandler(c *td.Client, m *td.Message) error {
 	b.WriteString(" min\n")
 
 	if len(queue) > 1 {
-		b.WriteString(fmt.Sprintf("\n<b>Next Up (%d):</b>\n", len(queue)-1))
+		b.WriteString(fmt.Sprintf("\n<b>Itne Aur Hai Abhi... (%d):</b>\n", len(queue)-1))
 
 		for i, song := range queue[1:] {
 			if i >= 14 {

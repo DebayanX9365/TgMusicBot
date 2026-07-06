@@ -111,7 +111,7 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool) error {
 	}
 
 	if url == "" && args == "" && (!isReply || !isValidMedia(rMsg)) {
-		_, _ = m.ReplyText(c, "<b>Usage:</b>\n/play [song or URL]\n\n<b>Supported Platforms:</b>\n- YouTube\n- Spotify\n- JioSaavn\n- Apple Music", &td.SendTextMessageOpts{ReplyMarkup: core.SupportKeyboard(), ParseMode: "HTML"})
+		_, _ = m.ReplyText(c, "<b>Usage:</b>\n/play [song or URL]\n\n<b>Supported Hawas:</b>\n-Jo Bhi Hawsi Chahe Aur Baaki Jo Tum Log Youtube Se Utha Ke Le Aao And /vplay paste hawsi link...", &td.SendTextMessageOpts{ReplyMarkup: core.SupportKeyboard(), ParseMode: "HTML"})
 		return td.EndGroups
 	}
 
